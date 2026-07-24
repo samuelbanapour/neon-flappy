@@ -103,6 +103,67 @@
   var overlaySub      = document.getElementById("overlaySubtitle");
   var startBtn    = document.getElementById("startBtn");
 
+  // ── Achievements / Awards ───────────────────────────────────────
+  var AWARDS = [
+    { id: "first",   name: "Off the Ground",    desc: "Score your first point",     icon: "🐣", check: function(s) { return s >= 1; } },
+    { id: "novice",  name: "Novice Flier",      desc: "Score 5 points",            icon: "🐥", check: function(s) { return s >= 5; } },
+    { id: "rookie",  name: "Rookie",            desc: "Score 10 points",           icon: "🕊️", check: function(s) { return s >= 10; } },
+    { id: "ace",     name: "Ace",               desc: "Score 20 points",           icon: "🦅", check: function(s) { return s >= 20; } },
+    { id: "veteran", name: "Veteran",           desc: "Score 30 points",           icon: "🏆", check: function(s) { return s >= 30; } },
+    { id: "half",    name: "Half Century",      desc: "Score 50 points",           icon: "🌟", check: function(s) { return s >= 50; } },
+    { id: "century", name: "Century Club",      desc: "Score 100 points",          icon: "💎", check: function(s) { return s >= 100; } },
+    { id: "marathon",name: "Marathon",          desc: "Score 200 points",          icon: "👑", check: function(s) { return s >= 200; } },
+    { id: "bounce",  name: "Bounce Back",       desc: "Die for the first time",    icon: "💫", check: function(s, died, best) { return died; } },
+    { id: "bestie",  name: "New Best!",         desc: "Beat your high score",      icon: "🔥", check: function(s, died, best) { return best; } },
+  ];
+
+  var unlockedAwards = JSON.parse(localStorage.getItem("neonFlappy_awards") || "[]");
+
+  function checkAwards(score, died, best) {
+    var newUnlock = false;
+    AWARDS.forEach(function (a) {
+      if (unlockedAwards.indexOf(a.id) === -1 && a.check(score, died, best)) {
+        unlockedAwards.push(a.id);
+        newUnlock = a;
+      }
+    });
+    if (newUnlock) {
+      localStorage.setItem("neonFlappy_awards", JSON.stringify(unlockedAwards));
+      showAwardToast(newUnlock);
+    }
+  }
+
+  function showAwardToast(award) {
+    var toast = document.createElement("div");
+    toast.id = "awardToast";
+    toast.innerHTML = '<span class="icon">' + award.icon + '</span> ' + award.name + '<br><small>' + award.desc + '</small>';
+    document.body.appendChild(toast);
+    toast.classList.add("show");
+    setTimeout(function () {
+      toast.classList.remove("show");
+      setTimeout(function () { toast.remove(); }, 400);
+    }, 2200);
+  }
+
+  function countUnlockedAwards() {
+    return unlockedAwards.length;
+  }
+
+  function buildAwardsHTML() {
+    var html = '<div class="awards-grid">';
+    AWARDS.forEach(function (a) {
+      var unlocked = unlockedAwards.indexOf(a.id) !== -1;
+      html += '<div class="award' + (unlocked ? '' : ' locked') + '">' +
+        '<span class="icon">' + (unlocked ? a.icon : '🔒') + '</span>' +
+        '<div>' +
+        '<div class="name">' + (unlocked ? a.name : '???') + '</div>' +
+        '<div class="desc">' + (unlocked ? a.desc : 'Keep playing to unlock') + '</div>' +
+        '</div></div>';
+    });
+    html += '</div>';
+    return html;
+  }
+
   function initBird() {
     bird = { x: W * 0.28, y: H * 0.45, vy: 0, angle: 0 };
   }
@@ -253,7 +314,10 @@
     }
 
     // Show game-over overlay after brief delay
-    setTimeout(showGameOver, 600);
+    setTimeout(function() {
+      showGameOver();
+      checkAwards(score, true, newBest);
+    }, 600);
   }
 
   function showGameOver() {
@@ -269,7 +333,11 @@
       '<div class="label">SCORE</div>' +
       '<div class="val' + (newBest ? ' new-best">★ ' : '">') + score + "</div>" +
       '<div class="label" style="margin-top:10px">BEST</div>' +
-      '<div class="val">' + highScore + "</div>";
+      '<div class="val">' + highScore + "</div>" +
+      '<div id="awardsSection" style="margin-top:16px;border-top:1px solid rgba(0,240,255,0.15);padding-top:12px">' +
+      '<div class="label" style="font-size:11px;letter-spacing:2px">AWARDS (' + countUnlockedAwards() + '/' + AWARDS.length + ')</div>' +
+      buildAwardsHTML() +
+      '</div>';
 
     overlaySub.textContent = newBest ? "🎉 New personal best!" : "Tap to try again";
     startBtn.textContent = "PLAY AGAIN";
@@ -313,6 +381,7 @@
         score++;
         scoreEl.textContent = score;
         bumpScore();
+        checkAwards(score, false, false);
         checkDifficulty();
       }
       // Remove off-screen pipes
@@ -642,11 +711,25 @@
     if (panel) panel.remove();
   });
 
-  // CSS bump animation (injected so no extra file needed)
+  // CSS bump + award styles (injected so no extra file needed)
   var styleTag = document.createElement("style");
   styleTag.textContent =
     "@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.28)}100%{transform:scale(1)}}" +
-    "#score.bump{animation:bump 0.18s ease forwards}";
+    "#score.bump{animation:bump 0.18s ease forwards}" +
+    "@keyframes toastIn{0%{transform:translateX(-50%) translateY(60px);opacity:0}15%{transform:translateX(-50%) translateY(0);opacity:1}85%{transform:translateX(-50%) translateY(0);opacity:1}100%{transform:translateX(-50%) translateY(-20px);opacity:0}}" +
+    "@keyframes toastIcon{0%{transform:scale(0.5)}50%{transform:scale(1.3)}100%{transform:scale(1)}}" +
+    "#awardToast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,10,30,0.92);border:1px solid rgba(0,240,255,0.35);border-radius:12px;padding:14px 22px;color:#fff;font-family:'Segoe UI',sans-serif;font-size:15px;text-align:center;pointer-events:none;z-index:1000;opacity:0;box-shadow:0 0 30px rgba(0,240,255,0.15);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);white-space:nowrap}" +
+    "#awardToast.show{animation:toastIn 2.4s ease forwards}" +
+    "#awardToast .icon{font-size:22px;display:inline-block;margin-right:6px;animation:toastIcon 0.4s ease forwards}" +
+    "#awardToast small{font-size:11px;color:rgba(0,240,255,0.7)}" +
+    ".awards-grid{display:flex;flex-direction:column;gap:6px;margin-top:8px}" +
+    ".award{display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:6px;background:rgba(0,240,255,0.04);font-size:12px;text-align:left;transition:opacity 0.3s}" +
+    ".award.locked{opacity:0.3;background:transparent}" +
+    ".award.locked .name{color:rgba(255,255,255,0.4)}" +
+    ".award .icon{font-size:16px;width:20px;text-align:center}" +
+    ".award .name{color:#00f0ff;font-weight:600;font-size:11px;letter-spacing:0.5px}" +
+    ".award .desc{color:rgba(255,255,255,0.45);font-size:10px}" +
+    ".award.locked .desc{color:rgba(255,255,255,0.25)}";
   document.head.appendChild(styleTag);
 
   boot();
