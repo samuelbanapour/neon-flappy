@@ -28,7 +28,7 @@
     "canvas": "^3.2.3"
   },
   "build": {
-    "appId": "studio.soloapps.neonflappy",
+    "appId": "com.soloappsstudio.neonflappy",
     "productName": "Neon Flappy",
     "copyright": "Copyright © 2026 Solo Apps Studio",
     "files": [

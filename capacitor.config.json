@@ -1,5 +1,5 @@
 {
-  "appId": "studio.soloapps.neonflappy",
+  "appId": "com.soloappsstudio.neonflappy",
   "appName": "Neon Flappy",
   "webDir": "www",
   "bundledWebRuntime": false,

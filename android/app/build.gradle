@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "studio.soloapps.neonflappy"
+    namespace = "com.soloappsstudio.neonflappy"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "studio.soloapps.neonflappy"
+        applicationId "com.soloappsstudio.neonflappy"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

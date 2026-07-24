@@ -1,4 +1,4 @@
-package studio.soloapps.neonflappy;
+package com.soloappsstudio.neonflappy;
 
 import com.getcapacitor.BridgeActivity;
 
