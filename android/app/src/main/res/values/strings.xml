@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Neon Flappy</string>
+    <string name="title_activity_main">Neon Flappy</string>
+    <string name="package_name">studio.soloapps.neonflappy</string>
+    <string name="custom_url_scheme">studio.soloapps.neonflappy</string>
+</resources>

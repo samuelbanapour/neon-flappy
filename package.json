@@ -1,0 +1,115 @@
+{
+  "name": "neon-flappy",
+  "version": "1.0.0",
+  "description": "Neon Flappy — a Flappy Bird-style arcade game",
+  "productName": "Neon Flappy",
+  "author": "Solo Apps Studio",
+  "main": "electron-main.js",
+  "scripts": {
+    "start": "electron .",
+    "electron:dev": "electron .",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux",
+    "build:all": "electron-builder -mwl",
+    "android:sync": "npx cap sync android",
+    "android:build:debug": "cd android && ./gradlew assembleDebug",
+    "android:build:release": "cd android && ./gradlew assembleRelease"
+  },
+  "devDependencies": {
+    "electron": "43.2.0",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/ios": "^8.4.2",
+    "canvas": "^3.2.3"
+  },
+  "build": {
+    "appId": "studio.soloapps.neonflappy",
+    "productName": "Neon Flappy",
+    "copyright": "Copyright © 2026 Solo Apps Studio",
+    "files": [
+      "electron-main.js",
+      "electron-preload.js",
+      "index.html",
+      "css/**",
+      "js/**",
+      "!node_modules/@capacitor/**",
+      "!node_modules/@ionic/**",
+      "!android/**",
+      "!ios/**",
+      "!www/**",
+      "!build/**"
+    ],
+    "extraMetadata": {
+      "main": "electron-main.js"
+    },
+    "icon": "build/icon.png",
+    "mac": {
+      "icon": "build/icon.icns",
+      "category": "public.app-category.games",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "pkg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ]
+    },
+    "dmg": {
+      "title": "Neon Flappy",
+      "backgroundColor": "#0a0118"
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "msi",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "category": "Game",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "directories": {
+      "output": "dist"
+    },
+    "electronVersion": "43.2.0"
+  }
+}
