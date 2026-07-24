@@ -156,12 +156,54 @@
       html += '<div class="award' + (unlocked ? '' : ' locked') + '">' +
         '<span class="icon">' + (unlocked ? a.icon : '🔒') + '</span>' +
         '<div>' +
-        '<div class="name">' + (unlocked ? a.name : '???') + '</div>' +
-        '<div class="desc">' + (unlocked ? a.desc : 'Keep playing to unlock') + '</div>' +
+        '<div class="name">' + a.name + '</div>' +
+        '<div class="desc">' + a.desc + '</div>' +
         '</div></div>';
     });
     html += '</div>';
     return html;
+  }
+
+  // ── Dedicated awards view ────────────────────────────────────────
+  var awardsBtn = null;
+  var backBtn = null;
+
+  function showAwardsView() {
+    // Build the awards view
+    var panel = document.getElementById("gameOverPanel");
+    if (panel) panel.remove();
+
+    overlayTitle.innerHTML = "AWARDS<div style=\"font-size:11px;letter-spacing:2px;margin-top:4px;opacity:0.6\">" + countUnlockedAwards() + " / " + AWARDS.length + " unlocked</div>";
+    overlaySub.textContent = "";
+
+    if (!panel) {
+      panel = document.createElement("div");
+      panel.id = "gameOverPanel";
+      overlay.insertBefore(panel, backBtn || startBtn);
+    }
+    panel.innerHTML = buildAwardsHTML();
+
+    startBtn.style.display = "none";
+    if (awardsBtn) awardsBtn.style.display = "none";
+    if (!backBtn) {
+      backBtn = document.createElement("button");
+      backBtn.id = "backBtn";
+      backBtn.className = "btn";
+      backBtn.textContent = "BACK";
+      overlay.insertBefore(backBtn, startBtn.nextSibling);
+    }
+    backBtn.style.display = "block";
+  }
+
+  function hideAwardsView() {
+    var panel = document.getElementById("gameOverPanel");
+    if (panel) panel.remove();
+    startBtn.style.display = "block";
+    if (awardsBtn) awardsBtn.style.display = "block";
+    if (backBtn) backBtn.style.display = "none";
+
+    overlayTitle.innerHTML = "NEON<br>FLAPPY";
+    overlaySub.textContent = "Tap or press Space to fly";
   }
 
   function initBird() {
@@ -294,6 +336,23 @@
     if (state === "menu" || state === "dead") startGame();
   });
 
+  // Create awards button on menu
+  awardsBtn = document.createElement("button");
+  awardsBtn.id = "awardsBtn";
+  awardsBtn.className = "btn btn-secondary";
+  awardsBtn.textContent = "AWARDS";
+  overlay.insertBefore(awardsBtn, startBtn.nextSibling);
+
+  awardsBtn.addEventListener("click", function () {
+    if (state === "menu") showAwardsView();
+  });
+
+  document.addEventListener("click", function (e) {
+    if (e.target && e.target.id === "backBtn") {
+      hideAwardsView();
+    }
+  });
+
   // ── State transitions ────────────────────────────────────────
   function startGame() {
     resetGame();
@@ -322,6 +381,7 @@
 
   function showGameOver() {
     overlayTitle.textContent = "GAME OVER";
+    if (awardsBtn) awardsBtn.style.display = "none";
     // Build score panel
     var panel = document.getElementById("gameOverPanel");
     if (!panel) {
@@ -705,10 +765,11 @@
     requestAnimationFrame(loop);
   }
 
-  // Remove a lingering game-over panel on re-show
+  // Remove game-over panel and restore awards button on re-show
   startBtn.addEventListener("click", function () {
     var panel = document.getElementById("gameOverPanel");
     if (panel) panel.remove();
+    if (awardsBtn) awardsBtn.style.display = "block";
   });
 
   // CSS bump + award styles (injected so no extra file needed)
@@ -729,7 +790,10 @@
     ".award .icon{font-size:16px;width:20px;text-align:center}" +
     ".award .name{color:#00f0ff;font-weight:600;font-size:11px;letter-spacing:0.5px}" +
     ".award .desc{color:rgba(255,255,255,0.45);font-size:10px}" +
-    ".award.locked .desc{color:rgba(255,255,255,0.25)}";
+    ".award.locked .desc{color:rgba(255,255,255,0.25)}" +
+    ".btn-secondary{display:block;margin:8px auto 0;background:transparent;border:1px solid rgba(0,240,255,0.3);color:rgba(0,240,255,0.6);font-size:11px;padding:8px 18px;letter-spacing:2px;width:auto;cursor:pointer}" +
+    ".btn-secondary:hover,.btn-secondary:active{border-color:rgba(0,240,255,0.6);color:#00f0ff}" +
+    "#backBtn{display:none;margin:16px auto 0;background:transparent;border:1px solid rgba(0,240,255,0.3);color:#00f0ff;font-size:11px;padding:8px 24px;letter-spacing:2px;width:auto;cursor:pointer}";
   document.head.appendChild(styleTag);
 
   boot();
