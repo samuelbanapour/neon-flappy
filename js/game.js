@@ -32,6 +32,115 @@
   var SHAKE_TIME     = 0.45;
   var SHAKE_AMP      = 11;
 
+  // ── Audio (Web Audio API — procedural, no files) ─────────────
+  var audioCtx = null;
+
+  function initAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+  }
+
+  function playFlap() {
+    if (!audioCtx) return;
+    var now = audioCtx.currentTime;
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(300, now);
+    osc.frequency.linearRampToValueAtTime(600, now + 0.08);
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.1);
+  }
+
+  function playScore() {
+    if (!audioCtx) return;
+    var now = audioCtx.currentTime;
+    [880, 1320].forEach(function (freq, i) {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      var t = now + i * 0.06;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.13, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.08);
+    });
+  }
+
+  function playHit() {
+    if (!audioCtx) return;
+    var now = audioCtx.currentTime;
+    // Low thud
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = "square";
+    osc.frequency.setValueAtTime(120, now);
+    osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.2);
+    // Noise burst
+    var bufSize = audioCtx.sampleRate * 0.1;
+    var buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+    var data = buf.getChannelData(0);
+    for (var i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
+    var noise = audioCtx.createBufferSource();
+    noise.buffer = buf;
+    var nGain = audioCtx.createGain();
+    nGain.gain.setValueAtTime(0.12, now);
+    nGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    noise.connect(nGain);
+    nGain.connect(audioCtx.destination);
+    noise.start(now);
+    noise.stop(now + 0.1);
+  }
+
+  function playAward() {
+    if (!audioCtx) return;
+    var now = audioCtx.currentTime;
+    [1047, 1319, 1568].forEach(function (freq, i) {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      var t = now + i * 0.07;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.1, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.13);
+    });
+  }
+
+  function playClick() {
+    if (!audioCtx) return;
+    var now = audioCtx.currentTime;
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 1200;
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.04);
+  }
+
   // star parallax layers
   var STAR_LAYERS = [
     { count: 60, speed: 18,  r: 0.6, alpha: 0.35 },
@@ -129,6 +238,7 @@
     });
     if (newUnlock) {
       localStorage.setItem("neonFlappy_awards", JSON.stringify(unlockedAwards));
+      playAward();
       showAwardToast(newUnlock);
     }
   }
@@ -167,6 +277,7 @@
   // ── Dedicated awards view ────────────────────────────────────────
   var awardsBtn = null;
   var backBtn = null;
+  var menuBtn = null;
 
   function showAwardsView() {
     // Build the awards view
@@ -313,13 +424,15 @@
       return;
     }
     if (state === "dead") return;
+    initAudio();
+    playFlap();
     bird.vy = FLAP_FORCE;
     spawnTrail();
   }
 
   document.addEventListener("pointerdown", function (e) {
-    // Ignore clicks on the overlay button (handled separately)
-    if (e.target === startBtn) return;
+    // Ignore clicks on overlay buttons (handled separately)
+    if (e.target === startBtn || e.target === menuBtn || e.target.id === "backBtn") return;
     flap();
   });
 
@@ -331,6 +444,8 @@
   });
 
   startBtn.addEventListener("click", function () {
+    initAudio();
+    playClick();
     if (state === "menu" || state === "dead") startGame();
   });
 
@@ -342,12 +457,27 @@
   overlay.insertBefore(awardsBtn, startBtn.nextSibling);
 
   awardsBtn.addEventListener("click", function () {
+    initAudio();
+    playClick();
     if (state === "menu") showAwardsView();
   });
 
+  // Create menu button (shown on game-over only)
+  menuBtn = document.createElement("button");
+  menuBtn.id = "menuBtn";
+  menuBtn.className = "btn btn-secondary";
+  menuBtn.textContent = "MENU";
+  menuBtn.style.display = "none";
+  overlay.insertBefore(menuBtn, awardsBtn.nextSibling);
+
   document.addEventListener("click", function (e) {
     if (e.target && e.target.id === "backBtn") {
+      playClick();
       hideAwardsView();
+    }
+    if (e.target && e.target.id === "menuBtn") {
+      playClick();
+      goToMenu();
     }
   });
 
@@ -355,13 +485,28 @@
   function startGame() {
     resetGame();
     state = "playing";
+    if (menuBtn) menuBtn.style.display = "none";
     hideOverlay();
+  }
+
+  function goToMenu() {
+    var panel = document.getElementById("gameOverPanel");
+    if (panel) panel.remove();
+    state = "menu";
+    overlayTitle.innerHTML = "NEON<br>FLAPPY";
+    overlaySub.textContent = "Tap or press Space to fly";
+    startBtn.textContent = "TAP TO START";
+    startBtn.style.display = "block";
+    if (awardsBtn) awardsBtn.style.display = "block";
+    if (menuBtn) menuBtn.style.display = "none";
+    showOverlay();
   }
 
   function die() {
     state = "dead";
     shakeTimer = SHAKE_TIME;
     spawnBurst();
+    playHit();
 
     // Save high score
     if (score > highScore) {
@@ -380,6 +525,7 @@
   function showGameOver() {
     overlayTitle.textContent = "GAME OVER";
     if (awardsBtn) awardsBtn.style.display = "none";
+    if (menuBtn) menuBtn.style.display = "block";
     // Build score panel
     var panel = document.getElementById("gameOverPanel");
     if (!panel) {
@@ -439,6 +585,7 @@
         score++;
         scoreEl.textContent = score;
         bumpScore();
+        playScore();
         checkAwards(score, false, false);
         checkDifficulty();
       }
