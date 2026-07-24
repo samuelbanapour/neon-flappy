@@ -170,17 +170,15 @@
 
   function showAwardsView() {
     // Build the awards view
-    var panel = document.getElementById("gameOverPanel");
-    if (panel) panel.remove();
+    var old = document.getElementById("gameOverPanel");
+    if (old) old.remove();
 
     overlayTitle.innerHTML = "AWARDS<div style=\"font-size:11px;letter-spacing:2px;margin-top:4px;opacity:0.6\">" + countUnlockedAwards() + " / " + AWARDS.length + " unlocked</div>";
     overlaySub.textContent = "";
 
-    if (!panel) {
-      panel = document.createElement("div");
-      panel.id = "gameOverPanel";
-      overlay.insertBefore(panel, backBtn || startBtn);
-    }
+    var panel = document.createElement("div");
+    panel.id = "gameOverPanel";
+    overlay.insertBefore(panel, backBtn || startBtn);
     panel.innerHTML = buildAwardsHTML();
 
     startBtn.style.display = "none";
@@ -374,8 +372,8 @@
 
     // Show game-over overlay after brief delay
     setTimeout(function() {
-      showGameOver();
       checkAwards(score, true, newBest);
+      showGameOver();
     }, 600);
   }
 
