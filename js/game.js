@@ -465,7 +465,7 @@
     ctx.fill();
   }
 
-  // Wing flap animation (driven by velocity)
+  // Wing flap animation
   var wingPhase = 0;
 
   function drawBird() {
@@ -473,193 +473,121 @@
     ctx.translate(bird.x, bird.y);
     ctx.rotate(bird.angle);
 
-    var bw = BIRD_R * 1.5, bh = BIRD_R;
+    // Flappy Bird: round ball body, ~BIRD_R radius
+    var r = BIRD_R;
 
-    // Wing flap: oscillates with velocity, flaps faster when flapping up
-    wingPhase += 0.15;
-    var flapAmt = Math.sin(wingPhase * 6) * 0.35;
-    // More aggressive flap when moving upward
-    if (bird.vy < -100) flapAmt *= 1.6;
+    // Wing flap
+    wingPhase += 0.18;
+    var flapAmt = Math.sin(wingPhase * 7);
+    if (bird.vy < -100) flapAmt *= 1.5;
 
-    // ── Tail feathers (3 fanned lines behind the bird) ─────────
+    // ── BODY — big round circle (the iconic Flappy Bird shape) ──
     ctx.shadowColor = "#00f0ff";
-    ctx.shadowBlur  = 8;
-    ctx.strokeStyle = "rgba(0,200,255,0.5)";
-    ctx.lineWidth   = 2;
-    ctx.lineCap     = "round";
-
-    for (var ti = -1; ti <= 1; ti++) {
-      var tAngle = ti * 0.28;
-      var tLen   = bw * 0.7 + (ti === 0 ? bw * 0.15 : 0);
-      ctx.beginPath();
-      ctx.moveTo(-bw * 0.7, ti * bh * 0.25);
-      ctx.quadraticCurveTo(
-        -bw * 1.1, ti * bh * 0.5 + Math.sin(wingPhase + ti) * 2,
-        -bw * 1.3, ti * bh * 0.35 + Math.sin(wingPhase + ti) * 3
-      );
-      ctx.stroke();
-    }
-
-    // ── Body — rounder, bird-shaped (wider at chest, tapered at rear) ──
-    ctx.shadowColor = "#00f0ff";
-    ctx.shadowBlur  = 20;
+    ctx.shadowBlur  = 22;
 
     ctx.beginPath();
-    ctx.moveTo(bw * 0.85, 0);                    // beak tip starts here
-    // Top of head → back
-    ctx.bezierCurveTo(
-      bw * 0.7,  -bh * 0.85,   // head top
-      bw * 0.1,  -bh * 1.0,    // crown
-      -bw * 0.4, -bh * 0.65    // upper back
-    );
-    // Back → tail base
-    ctx.bezierCurveTo(
-      -bw * 0.7, -bh * 0.35,
-      -bw * 0.85, bh * 0.0,
-      -bw * 0.7,  bh * 0.35    // rump
-    );
-    // Underside → chest
-    ctx.bezierCurveTo(
-      -bw * 0.4, bh * 0.75,
-      bw * 0.1,  bh * 0.9,
-      bw * 0.65, bh * 0.5      // throat
-    );
-    // Throat → beak
-    ctx.bezierCurveTo(
-      bw * 0.8,  bh * 0.25,
-      bw * 0.88, bh * 0.08,
-      bw * 0.85, 0
-    );
-    ctx.closePath();
-
-    var bodyGrad = ctx.createRadialGradient(
-      bw * 0.1, -bh * 0.2, 2,
-      bw * 0.0,  bh * 0.1, bw * 1.1
-    );
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    var bodyGrad = ctx.createRadialGradient(-r * 0.2, -r * 0.25, 1, 0, 0, r);
     bodyGrad.addColorStop(0,   "#b0ffff");
-    bodyGrad.addColorStop(0.3, "#00f0ff");
-    bodyGrad.addColorStop(0.7, "#00c8e0");
+    bodyGrad.addColorStop(0.35, "#00f0ff");
+    bodyGrad.addColorStop(0.75, "#00c8e0");
     bodyGrad.addColorStop(1,   "#005870");
     ctx.fillStyle = bodyGrad;
     ctx.fill();
 
-    // Subtle body outline
-    ctx.strokeStyle = "rgba(0,255,255,0.25)";
+    // Body outline
+    ctx.strokeStyle = "rgba(0,255,255,0.3)";
     ctx.lineWidth   = 1;
     ctx.stroke();
 
-    // ── Wing (filled, flapping) ────────────────────────────────
-    ctx.shadowBlur = 12;
+    // ── WING — small oval on the side, flaps up/down ──────────
+    ctx.shadowBlur = 8;
     ctx.shadowColor = "#00d4ff";
 
-    var wingY = bh * 0.1 + flapAmt * bh * 1.2;
-    var wingDroop = flapAmt * 0.4;
+    var wingYOff = flapAmt * r * 0.5;
 
     ctx.beginPath();
-    ctx.moveTo(bw * 0.15, wingY - bh * 0.1);
-    // Wing tip — sweeps back and up/down
-    ctx.bezierCurveTo(
-      -bw * 0.1, wingY - bh * 0.55 + wingDroop * bh,
-      -bw * 0.5, wingY - bh * 0.5  + wingDroop * bh,
-      -bw * 0.7, wingY - bh * 0.15 + wingDroop * bh * 0.5
-    );
-    // Wing trailing edge — back to body
-    ctx.bezierCurveTo(
-      -bw * 0.45, wingY + bh * 0.15,
-      -bw * 0.1,  wingY + bh * 0.2,
-      bw * 0.2,   wingY + bh * 0.05
-    );
-    ctx.closePath();
-
-    var wingGrad = ctx.createLinearGradient(
-      bw * 0.2, wingY - bh * 0.4,
-      -bw * 0.6, wingY + bh * 0.1
-    );
-    wingGrad.addColorStop(0,   "rgba(0,220,255,0.85)");
-    wingGrad.addColorStop(0.5, "rgba(0,180,220,0.6)");
-    wingGrad.addColorStop(1,   "rgba(0,100,140,0.3)");
+    ctx.ellipse(-r * 0.15, r * 0.05 + wingYOff, r * 0.55, r * 0.32, -0.15, 0, Math.PI * 2);
+    var wingGrad = ctx.createLinearGradient(-r * 0.6, wingYOff, r * 0.3, r * 0.3 + wingYOff);
+    wingGrad.addColorStop(0,   "rgba(0,200,255,0.8)");
+    wingGrad.addColorStop(0.5, "rgba(0,160,200,0.55)");
+    wingGrad.addColorStop(1,   "rgba(0,80,120,0.25)");
     ctx.fillStyle = wingGrad;
     ctx.fill();
+    ctx.strokeStyle = "rgba(0,255,255,0.2)";
+    ctx.lineWidth   = 0.8;
+    ctx.stroke();
 
-    // Wing feather lines
-    ctx.strokeStyle = "rgba(0,255,255,0.3)";
-    ctx.lineWidth   = 1;
-    for (var fi = 0; fi < 3; fi++) {
-      var fx = bw * 0.05 - fi * bw * 0.2;
-      ctx.beginPath();
-      ctx.moveTo(fx, wingY - bh * 0.15);
-      ctx.quadraticCurveTo(
-        fx - bw * 0.1, wingY - bh * 0.35 + wingDroop * bh * 0.6,
-        fx - bw * 0.3, wingY - bh * 0.2  + wingDroop * bh * 0.3
-      );
-      ctx.stroke();
-    }
-
-    // ── Beak (triangle, top and bottom) ────────────────────────
-    ctx.shadowBlur = 6;
-    ctx.shadowColor = "#ffcc00";
+    // ── BEAK — two triangles (orange, the Flappy Bird signature) ──
+    ctx.shadowBlur = 4;
+    ctx.shadowColor = "#ff8800";
 
     // Upper beak
     ctx.beginPath();
-    ctx.moveTo(bw * 0.6, -bh * 0.15);
-    ctx.lineTo(bw * 1.25, -bh * 0.05);
-    ctx.lineTo(bw * 0.6, bh * 0.05);
+    ctx.moveTo(r * 0.55, -r * 0.12);
+    ctx.lineTo(r * 1.35, -r * 0.04);
+    ctx.lineTo(r * 0.55, r * 0.1);
     ctx.closePath();
-    var beakGrad1 = ctx.createLinearGradient(bw * 0.6, 0, bw * 1.25, 0);
-    beakGrad1.addColorStop(0,   "#ffaa00");
-    beakGrad1.addColorStop(0.6, "#ff8800");
-    beakGrad1.addColorStop(1,   "#ff6600");
-    ctx.fillStyle = beakGrad1;
+    var ubGrad = ctx.createLinearGradient(r * 0.55, 0, r * 1.35, 0);
+    ubGrad.addColorStop(0,   "#ff9900");
+    ubGrad.addColorStop(0.7, "#ff6600");
+    ubGrad.addColorStop(1,   "#ee4400");
+    ctx.fillStyle = ubGrad;
     ctx.fill();
 
-    // Lower beak (slightly smaller)
+    // Lower beak
     ctx.beginPath();
-    ctx.moveTo(bw * 0.65, bh * 0.05);
-    ctx.lineTo(bw * 1.15, bh * 0.1);
-    ctx.lineTo(bw * 0.65, bh * 0.18);
+    ctx.moveTo(r * 0.6, r * 0.1);
+    ctx.lineTo(r * 1.2, r * 0.12);
+    ctx.lineTo(r * 0.6, r * 0.24);
     ctx.closePath();
-    ctx.fillStyle = "#dd7700";
+    ctx.fillStyle = "#cc5500";
     ctx.fill();
 
-    // Beak line (separation)
-    ctx.strokeStyle = "rgba(0,0,0,0.3)";
-    ctx.lineWidth   = 0.8;
+    // Beak separation line
+    ctx.strokeStyle = "rgba(0,0,0,0.25)";
+    ctx.lineWidth   = 0.7;
     ctx.beginPath();
-    ctx.moveTo(bw * 0.6, bh * 0.02);
-    ctx.lineTo(bw * 1.2, bh * 0.03);
+    ctx.moveTo(r * 0.55, r * 0.09);
+    ctx.lineTo(r * 1.3,  r * 0.05);
     ctx.stroke();
 
-    // ── Eye ────────────────────────────────────────────────────
+    // ── EYE — big white circle with black pupil (Flappy Bird style) ──
     ctx.shadowBlur = 0;
 
-    // Eye white
+    // Eye white — big and round
     ctx.fillStyle = "#ffffff";
     ctx.beginPath();
-    ctx.ellipse(bw * 0.5, -bh * 0.28, 4.2, 4.8, 0, 0, Math.PI * 2);
+    ctx.arc(r * 0.35, -r * 0.25, r * 0.38, 0, Math.PI * 2);
     ctx.fill();
-
-    // Eye ring (subtle cyan)
-    ctx.strokeStyle = "rgba(0,200,255,0.4)";
-    ctx.lineWidth   = 0.7;
+    ctx.strokeStyle = "rgba(0,180,220,0.35)";
+    ctx.lineWidth   = 0.6;
     ctx.stroke();
 
-    // Pupil
-    ctx.fillStyle = "#0a0118";
+    // Pupil — offset right (looking forward)
+    ctx.fillStyle = "#111";
     ctx.beginPath();
-    ctx.ellipse(bw * 0.54, -bh * 0.26, 2.2, 2.6, 0.1, 0, Math.PI * 2);
+    ctx.arc(r * 0.42, -r * 0.22, r * 0.2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Eye highlight
-    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    // Eye highlight (white dot)
+    ctx.fillStyle = "#fff";
     ctx.beginPath();
-    ctx.arc(bw * 0.48, -bh * 0.34, 1.2, 0, Math.PI * 2);
+    ctx.arc(r * 0.36, -r * 0.32, r * 0.08, 0, Math.PI * 2);
     ctx.fill();
 
-    // ── Cheek blush (subtle) ──────────────────────────────────
-    ctx.fillStyle = "rgba(255,100,180,0.15)";
-    ctx.beginPath();
-    ctx.ellipse(bw * 0.35, bh * 0.15, 4, 2.5, 0.1, 0, Math.PI * 2);
-    ctx.fill();
+    // ── TAIL — 3 small feather tufts at the back ──────────────
+    ctx.strokeStyle = "rgba(0,200,255,0.45)";
+    ctx.lineWidth   = 1.8;
+    ctx.lineCap     = "round";
+    ctx.shadowBlur  = 4;
+
+    for (var ti = -1; ti <= 1; ti++) {
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.85, ti * r * 0.22);
+      ctx.lineTo(-r * 1.25, ti * r * 0.3 + Math.sin(wingPhase + ti) * 1.5);
+      ctx.stroke();
+    }
 
     ctx.restore();
   }
